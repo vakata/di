@@ -4,6 +4,7 @@ return (object)[
     'destDirectory' => 'docs',
     'format' => 'github',
     'classes' => [
-        '\\vakata\\di\\Container'
+        '\\vakata\\di\\DIContainer',
+        '\\vakata\\di\\SoapProxy'
     ],
 ];
