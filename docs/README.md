@@ -1,3 +1,4 @@
 # vakata\di
 
-* [vakata\di\Container](Container.md) 
+* [vakata\di\DIContainer](DIContainer.md) 
+* [vakata\di\SoapProxy](SoapProxy.md) 
