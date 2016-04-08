@@ -152,6 +152,11 @@ class DIContainer implements DIInterface
         $arguments = $this->arguments($method, $arguments);
         return $method->invokeArgs($class, $arguments);
     }
+
+    public function __call($method, array $arguments = [])
+    {
+        return $this->instance($method, $arguments);
+    }
 }
 
 /**
