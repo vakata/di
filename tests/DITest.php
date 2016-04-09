@@ -56,7 +56,7 @@ class DITest extends \PHPUnit_Framework_TestCase
 		$c2 = new \vakata\di\test\Class2();
 		$di->register($c2, 'c2');
 		$di->register('\vakata\di\test\Class3', ['c3', 'c4'], [3], true);
-		$di->register('\vakata\di\test\Class2', '\vakata\di\test\Itest2');
+		$di->register('\vakata\di\test\Class2', '\vakata\di\test\ITest2');
 
 		$this->assertEquals(true, $di->instance('\vakata\di\test\Class1') instanceof \vakata\di\test\Class1);
 		$this->assertEquals(true, $di->instance('\vakata\di\test\ITest1') instanceof \vakata\di\test\Class1);

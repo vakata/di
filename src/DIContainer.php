@@ -79,7 +79,7 @@ class DIContainer implements DIInterface
         }
         $alias[] = $class;
         foreach ($alias as $name) {
-            $this->replacements[trim(strtolower($name), '\\')] = [$class, $defaults, $single];
+            $this->replacements[trim($name, '\\')] = [$class, $defaults, $single];
         }
 
         return $this;
@@ -95,8 +95,8 @@ class DIContainer implements DIInterface
     {
         $defaults = [];
         $single = false;
-        if (isset($this->replacements[trim(strtolower($class), '\\')])) {
-            list($class, $defaults, $single) = $this->replacements[trim(strtolower($class), '\\')];
+        if (isset($this->replacements[trim($class, '\\')])) {
+            list($class, $defaults, $single) = $this->replacements[trim($class, '\\')];
             $prepend = [];
             foreach ($arguments as $k => $v) {
                 if (is_int($k)) {
@@ -107,8 +107,8 @@ class DIContainer implements DIInterface
             }
             $arguments = array_merge($prepend, $defaults);
         }
-        if ($single && isset($this->instances[trim(strtolower($class), '\\')])) {
-            return $this->instances[trim(strtolower($class), '\\')];
+        if ($single && isset($this->instances[trim($class, '\\')])) {
+            return $this->instances[trim($class, '\\')];
         }
 
         try {
@@ -123,7 +123,7 @@ class DIContainer implements DIInterface
             $instance = count($arguments) ? $reflection->newInstanceArgs($arguments) : new $reflection->name();
 
             if ($single && $instance) {
-                $this->instances[trim(strtolower($class), '\\')] = $instance;
+                $this->instances[trim($class, '\\')] = $instance;
             }
 
             return $instance;
