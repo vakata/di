@@ -142,15 +142,17 @@ class DIContainer implements DIInterface
      */
     public function invoke($class, $method, array $arguments = [], array $construct = [])
     {
-        $class = is_string($class) ? $this->instance($class, $construct) : $class;
-
+        if (is_string($class) && isset($this->replacements[trim($class, '\\')])) {
+            $class = $this->replacements[trim($class, '\\')][0];
+        }
         try {
             $method = new \ReflectionMethod($class, $method);
         } catch (\ReflectionException $e) {
             throw new DIException('Could not invoke method');
         }
+        $class = is_string($class) && !$method->isStatic() ? $this->instance($class, $construct) : $class;
         $arguments = $this->arguments($method, $arguments);
-        return $method->invokeArgs($class, $arguments);
+        return $method->invokeArgs($method->isStatic() ? null : $class, $arguments);
     }
 
     public function __call($method, array $arguments = [])
