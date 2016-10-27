@@ -55,7 +55,6 @@ class DIContainer implements DIInterface
      * Register a class name or an instance in the container.
      * Unregistered classes will be created too, the idea of this method is to create aliases for a class.
      * If aliases are not specified the interfaces that the class implements will be used.
-     * @method register
      * @param  mixed    $class    the class string (or instance)
      * @param  array|string|null   $alias    the aliases to which this class responds
      * @param  array    $defaults defaults to use when creating instances
@@ -86,7 +85,6 @@ class DIContainer implements DIInterface
     }
     /**
      * Create an instance of a class.
-     * @method instance
      * @param  string   $class     the class name (or registered alias)
      * @param  array    $arguments optional arguments to use when creating the instance
      * @return mixed               the class instance
@@ -133,7 +131,6 @@ class DIContainer implements DIInterface
     }
     /**
      * Invoke a method of a class.
-     * @method invoke
      * @param  mixed  $class     the class name or an instance to use
      * @param  string $method    the method name to execute
      * @param  array  $arguments optional array of arguments to invoke with
@@ -169,7 +166,6 @@ class DIContainer implements DIInterface
  *  * method - string, the method name being executed
  *  * arguments - array, the data the method is executed with
  *  * result - the result of the execution, only available if the function was registered with `after`
- * @method decorate
  * @param  string   $expression the class & method to decorate - for example class::method or class::* or *::*
  * @param  callable $callback   the function to execute
  * @param  string   $mode       should the function be executed `before` or `after` the method, defaults to `after`

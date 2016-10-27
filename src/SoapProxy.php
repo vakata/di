@@ -13,7 +13,6 @@ class SoapProxy
 
     /**
      * Create an instance to pass to $soap->handle().
-     * @method __construct
      * @param  DIInterface $dic   the DI container instance
      * @param  string      $class the class name
      */
