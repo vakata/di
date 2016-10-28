@@ -19,7 +19,7 @@ class SoapProxy
     public function __construct(DIInterface $dic, $class)
     {
         $this->dic = $dic;
-        $this->instance = $this->di->instance($class);
+        $this->instance = $this->dic->instance($class);
     }
     public function __call($method, $args)
     {
