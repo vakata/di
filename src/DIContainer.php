@@ -31,7 +31,11 @@ class DIContainer implements DIInterface
                     $arguments[] = array_shift($args);
                     continue;
                 }
-                $temp = $this->instance('\\'.$name);
+                try {
+                    $temp = $this->instance('\\'.$name);
+                } catch (\Throwable $e) {
+                    $temp = null;
+                }
                 if ($temp !== null) {
                     $arguments[] = $temp;
                     continue;
