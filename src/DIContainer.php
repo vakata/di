@@ -31,17 +31,26 @@ class DIContainer implements DIInterface
                     $arguments[] = array_shift($args);
                     continue;
                 }
+                $last = null;
                 try {
                     $temp = $this->instance('\\'.$name);
                 } catch (\Throwable $e) {
+                    $last = $e;
                     $temp = null;
                 }
                 if ($temp !== null) {
                     $arguments[] = $temp;
                     continue;
                 }
-                $arguments[] = $v->isOptional() ? $v->getDefaultValue() : null;
-                continue;
+                if ($v->isOptional()) {
+                    $arguments[] = $v->getDefaultValue();
+                    continue;
+                }
+                if ($v->allowsNull()) {
+                    $arguments[] = null;
+                    continue;
+                }
+                throw $last;
             }
             // otherwise - just append
             if (count($args)) {
