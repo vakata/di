@@ -83,8 +83,11 @@ class DIContainer implements DIInterface
             $class = $temp;
         }
         if ($alias === null) {
-            $reflection = new \ReflectionClass($class);
-            $alias = $reflection->getInterfaceNames();
+            try {
+                $reflection = new \ReflectionClass($class);
+                $alias = $reflection->getInterfaceNames();
+            } catch (\Throwable $e) {
+            }
         }
         if (!is_array($alias)) {
             $alias = [$alias];
@@ -130,6 +133,8 @@ class DIContainer implements DIInterface
 
             if ($constructor) {
                 $arguments = $this->arguments($constructor, $arguments);
+            } else {
+                $arguments = [];
             }
             $instance = count($arguments) ? $reflection->newInstanceArgs($arguments) : new $reflection->name();
 
