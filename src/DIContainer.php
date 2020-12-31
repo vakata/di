@@ -25,8 +25,36 @@ class DIContainer implements DIInterface
                 continue;
             }
             // then with type hints (provided the next argument matches)
-            if ($v->getClass()) {
-                $name = $v->getClass()->name;
+            $name = null;
+            if ((int)PHP_VERSION >= 8) {
+                $type = $v->getType();
+                if ($type && $type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
+                    $name = $type->getName();
+                }
+                if ($type && $type instanceof \ReflectionUnionType) {
+                    $first = null;
+                    foreach ($type->getTypes() as $t) {
+                        if ($t && $t instanceof \ReflectionNamedType && !$t->isBuiltin()) {
+                            $n = $t->getName();
+                            if (!isset($first)) {
+                                $first = $n;
+                            }
+                            if (count($args) && $args[0] instanceof $n) {
+                                $name = $n;
+                                break;
+                            }
+                        }
+                    }
+                    if (!isset($name)) {
+                        $name = $first;
+                    }
+                }
+            } else {
+                if ($v->getClass()) {
+                    $name = $v->getClass()->name;
+                }
+            }
+            if ($name) {
                 if (count($args) && $args[0] instanceof $name) {
                     $arguments[] = array_shift($args);
                     continue;
@@ -52,6 +80,7 @@ class DIContainer implements DIInterface
                 }
                 throw $last;
             }
+            // TODO: add scalar type hints and possibly better union types
             // otherwise - just append
             if (count($args)) {
                 $arguments[] = array_shift($args);
