@@ -37,18 +37,9 @@ class Class5
 	public function sum2($a, $b) { return $a + $b; }
 }
 
-class DITest extends \PHPUnit_Framework_TestCase
+class DITest extends \PHPUnit\Framework\TestCase
 {
 	protected static $storage = null;
-
-	public static function setUpBeforeClass() {
-	}
-	public static function tearDownAfterClass() {
-	}
-	protected function setUp() {
-	}
-	protected function tearDown() {
-	}
 
 	public function testCreate() {
 		$di = new \vakata\di\DIContainer();
@@ -75,9 +66,5 @@ class DITest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals(7, $di->invoke('\vakata\di\test\Class5', 'sum'));
 		$this->assertEquals(9, $di->invoke('\vakata\di\test\Class5', 'sum', [], [4,1]));
 		$this->assertEquals(3, $di->invoke('\vakata\di\test\Class5', 'sum2', [1,2]));
-	}
-	public function testInstance() {
-		// registered class
-		// not registered class
 	}
 }
