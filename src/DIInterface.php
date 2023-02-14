@@ -4,7 +4,9 @@ namespace vakata\di;
 
 interface DIInterface
 {
-    public function register($class, $alias = null, array $defaults = [], $single = false);
-    public function instance($class, array $arguments = []);
-    public function invoke($class, $method, array $arguments = [], array $construct = []);
+    public function get(string $id): mixed;
+    public function has(string $id): bool;
+    public function register(mixed $class, mixed $alias = null, array $defaults = [], bool $single = false): mixed;
+    public function instance(string $class, array $arguments = []): mixed;
+    public function invoke(mixed $class, string $method, array $arguments = [], array $construct = []): mixed;
 }
