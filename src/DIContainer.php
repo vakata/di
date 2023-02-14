@@ -147,7 +147,7 @@ class DIContainer implements DIInterface
      * @param  array    $arguments optional arguments to use when creating the instance
      * @return mixed               the class instance
      */
-    public function instance(string $class, array $arguments = []): mixed
+    public function instance(string $class, array $arguments = [], bool $onlyExisting = false): mixed
     {
         $defaults = [];
         $single = false;
@@ -165,6 +165,10 @@ class DIContainer implements DIInterface
         }
         if ($single && isset($this->instances[trim($class, '\\')])) {
             return $this->instances[trim($class, '\\')];
+        }
+
+        if ($onlyExisting) {
+            return null;
         }
 
         try {
