@@ -8,9 +8,9 @@ interface DIInterface
      * Get a previously registered instance.
      * 
      * @param string $clss
-     * @return object
+     * @return mixed
      */
-    public function get(string $clss): object;
+    public function get(string $clss): mixed;
 
     /**
      * Is there an instance registered under the sprcified name or alias

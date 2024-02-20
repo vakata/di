@@ -92,7 +92,7 @@ class DIContainer implements DIInterface
         return $arguments;
     }
 
-    public function get(string $clss): object
+    public function get(string $clss): mixed
     {
         $clss = trim($clss, '\\');
         if (isset($this->replacements[$clss])) {
