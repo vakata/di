@@ -2,6 +2,8 @@
 
 namespace vakata\di;
 
+use RuntimeException;
+
 /**
  * A minimal DI container.
  */
@@ -9,28 +11,12 @@ class DIContainer implements DIInterface
 {
     protected array $replacements = [];
     protected array $instances = [];
-    protected array $decorations = [];
+    protected array $defaults = [];
 
-    public function get(string $id): mixed
-    {
-        return $this->instance($id);
-    }
-    public function has(string $id): bool
-    {
-        $id = trim($id, '\\');
-        if (isset($this->replacements[$id])) {
-            $id = $this->replacements[$id][0];
-        }
-        return isset($this->instances[$id]);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
     protected function arguments(\ReflectionMethod $method, array $args = []): array
     {
         $arguments = [];
-        foreach ($method->getParameters() as $k => $v) {
+        foreach ($method->getParameters() as $v) {
             // named first
             if ($v->getName() && isset($args[$v->getName()])) {
                 $arguments[] = $args[$v->getName()];
@@ -106,68 +92,81 @@ class DIContainer implements DIInterface
         return $arguments;
     }
 
-    /**
-     * Register a class name or an instance in the container.
-     * Unregistered classes will be created too, the idea of this method is to create aliases for a class.
-     * If aliases are not specified the interfaces that the class implements will be used.
-     * @param  mixed    $class    the class string (or instance)
-     * @param  array|string|null   $alias    the aliases to which this class responds
-     * @param  array    $defaults defaults to use when creating instances
-     * @param  boolean  $single   should only a single instance of this class exist
-     * @return self
-     */
-    public function register(mixed $class, mixed $alias = null, array $defaults = [], bool $single = false): mixed
+    public function get(string $clss): object
     {
-        if (is_object($class)) {
-            $single = true;
-            $temp = get_class($class);
-            $this->instances[$temp] = $class;
-            $class = $temp;
+        $clss = trim($clss, '\\');
+        if (isset($this->replacements[$clss])) {
+            $clss = $this->replacements[$clss];
         }
-        if ($alias === null) {
+        return $this->instances[$clss] ?? throw new RuntimeException('Instance not found');
+    }
+    public function has(string $clss): bool
+    {
+        $clss = trim($clss, '\\');
+        if (isset($this->replacements[$clss])) {
+            $clss = $this->replacements[$clss];
+        }
+        return isset($this->instances[$clss]);
+    }
+    public function defaults(string $clss, array $defaults): static
+    {
+        $this->defaults[trim($clss, '\\')] = $defaults;
+        return $this;
+    }
+    public function alias(string $clss, array $aliases = [], bool $interfaces = false, bool $parents = false): static
+    {
+        $clss = trim($clss, '\\');
+        if ($interfaces || $parents) {
             try {
-                $reflection = new \ReflectionClass($class);
-                $alias = $reflection->getInterfaceNames();
+                $reflection = new \ReflectionClass($clss);
+                if ($interfaces) {
+                    foreach ($reflection->getInterfaceNames() as $iname) {
+                        $aliases[] = $iname;
+                    }
+                }
+                if ($parents) {
+                    $temp = $reflection;
+                    while ($temp = $temp->getParentClass()) {
+                        $aliases[] = $temp->getName();
+                    }
+                }
             } catch (\Throwable $e) {
             }
         }
-        if (!is_array($alias)) {
-            $alias = [$alias];
+        foreach ($aliases as $name) {
+            $this->replacements[trim($name, '\\')] = $clss;
         }
-        $alias[] = $class;
-        foreach ($alias as $name) {
-            $this->replacements[trim($name, '\\')] = [$class, $defaults, $single];
-        }
-
         return $this;
     }
-    public function instance(string $class, array $arguments = [], bool $onlyExisting = false): mixed
+    public function register(object $instance, bool $alias = true): static
     {
-        $defaults = [];
-        $single = false;
-        if (isset($this->replacements[trim($class, '\\')])) {
-            list($class, $defaults, $single) = $this->replacements[trim($class, '\\')];
-            $prepend = [];
-            foreach ($arguments as $k => $v) {
+        $clss = get_class($instance);
+        $this->instances[$clss] = $instance;
+        if ($alias) {
+            $this->alias($clss, [], true, true);
+        }
+        return $this;
+    }
+    public function instance(string $clss, array $arguments = [], bool $force = false): object
+    {
+        $clss = trim($clss, '\\');
+        if (isset($this->replacements[trim($clss, '\\')])) {
+            $clss = $this->replacements[$clss];
+        }
+        if (!$force && isset($this->instances[$clss])) {
+            return $this->instances[$clss];
+        }
+        if (isset($this->defaults[$clss])) {
+            foreach ($this->defaults[$clss] as $k => $v) {
                 if (is_int($k)) {
-                    $prepend[] = $v;
-                } else {
-                    $defaults[$k] = $v;
+                    $arguments[] = $v;
+                } else if (!isset($arguments[$k])) {
+                    $arguments[$k] = $v;
                 }
             }
-            $arguments = array_merge($prepend, $defaults);
         }
-        if ($single && isset($this->instances[trim($class, '\\')])) {
-            return $this->instances[trim($class, '\\')];
-        }
-
-        if ($onlyExisting) {
-            return null;
-        }
-
         try {
-            $arguments = array_values($arguments);
-            $reflection = new \ReflectionClass($class);
+            $reflection = new \ReflectionClass($clss);
             $constructor = $reflection->getConstructor();
             $instance = null;
 
@@ -177,136 +176,26 @@ class DIContainer implements DIInterface
                 $arguments = [];
             }
             $instance = count($arguments) ? $reflection->newInstanceArgs($arguments) : new $reflection->name();
-
-            if ($single) {
-                $this->instances[trim($class, '\\')] = $instance;
-            }
-
             return $instance;
         } catch (\ReflectionException $e) {
             throw new DIException('Could not create instance - '.$e->getMessage());
         }
     }
-    /**
-     * Invoke a method of a class.
-     * @param  mixed  $class     the class name or an instance to use
-     * @param  string $method    the method name to execute
-     * @param  array  $arguments optional array of arguments to invoke with
-     * @param  array  $construct optional array of arguments to construct the class instance with (if $class is string)
-     * @return mixed             the result of the method execution
-     */
-    public function invoke(mixed $class, string $method, array $arguments = [], array $construct = []): mixed
+    public function invoke(string $clss, string $method, array $arguments = [], array $construct = []): mixed
     {
-        if (is_string($class) && isset($this->replacements[trim($class, '\\')])) {
-            $class = $this->replacements[trim($class, '\\')][0];
+        $clss = trim($clss, '\\');
+        if (isset($this->replacements[trim($clss, '\\')])) {
+            $clss = $this->replacements[$clss];
         }
         try {
-            $method = new \ReflectionMethod($class, $method);
+            $method = new \ReflectionMethod($clss, $method);
         } catch (\ReflectionException $e) {
             throw new DIException('Could not invoke method');
         }
-        $class = is_string($class) && !$method->isStatic() ? $this->instance($class, $construct) : $class;
         $arguments = $this->arguments($method, $arguments);
-        return $method->invokeArgs($method->isStatic() ? null : $class, $arguments);
-    }
-
-    public function __call(string $method, array $arguments = []): mixed
-    {
-        return $this->instance($method, $arguments);
+        if (!$method->isStatic()) {
+            return $method->invokeArgs($this->instance($clss, $construct), $arguments);
+        }
+        return $method->invokeArgs(null, $arguments);
     }
 }
-
-/**
- * Attach a function to be executed before or after executing a given method (provided that `invoke` is used).
- * The function will receive an array as a single parameter, containing the following keys:
- *  * instance - the instance of the class
- *  * class - string, the class name
- *  * method - string, the method name being executed
- *  * arguments - array, the data the method is executed with
- *  * result - the result of the execution, only available if the function was registered with `after`
- * @param  string   $expression the class & method to decorate - for example class::method or class::* or *::*
- * @param  callable $callback   the function to execute
- * @param  string   $mode       should the function be executed `before` or `after` the method, defaults to `after`
- * @return self
- */
-/*
-public function decorate($expression, callable $callback, $mode = 'after')
-{
-    if (!is_array($expression)) {
-        $expression = explode(',', $expression);
-    }
-    foreach ($expression as $e) {
-        list($class, $method) = array_pad(preg_split('((->)|(::))', $e, 2), 2, '*');
-        $class = trim($class);
-        $method = trim($method);
-        if (!isset($this->decorations[trim($class)])) {
-            $this->decorations[trim($class)] = [];
-        }
-        if (!isset($this->decorations[$class][$method])) {
-            $this->decorations[$class][$method] = [];
-        }
-        $this->decorations[$class][$method][] = [$mode, $callback];
-    }
-    return $this;
-}
-
-public function invoke($class, $method, array $arguments = [], array $construct = [])
-{
-    $instance = is_string($class) ? $this->instance($class, $construct) : $class;
-    $class = get_class($instance);
-
-    try {
-        $reflection = new \ReflectionMethod($instance, $method);
-    } catch (\ReflectionException $e) {
-        throw new DIException('Could not invoke method');
-    }
-    $arguments = $this->arguments($reflection, $arguments);
-
-    $execute = [
-        'before' => [],
-        'after' => [],
-    ];
-
-    foreach ($this->decorations as $className => $methods) {
-        if ($className === '*' || is_a($instance, $className)) {
-            foreach ($methods as $methodName => $callbacks) {
-                if ($methodName === '*' || $method === $methodName) {
-                    foreach ($callbacks as $cb) {
-                        if (!isset($execute[$cb[0]])) {
-                            $execute[$cb[0]] = [];
-                        }
-                        $execute[$cb[0]][] = $cb[1];
-                    }
-                }
-            }
-        }
-    }
-
-    foreach ($execute['before'] as $cb) {
-        call_user_func($cb, [
-            'instance' => $instance,
-            'class' => $class,
-            'method' => $method,
-            'arguments' => $arguments,
-        ]);
-    }
-
-    try {
-        $rslt = $reflection->invokeArgs($instance, $arguments);
-    } catch (\ReflectionException $e) {
-        throw new DIException('Error invoking method');
-    }
-
-    foreach ($execute['after'] as $cb) {
-        call_user_func($cb, [
-            'instance' => $instance,
-            'class' => $class,
-            'method' => $method,
-            'arguments' => $arguments,
-            'result' => $rslt,
-        ]);
-    }
-
-    return $rslt;
-}
-*/

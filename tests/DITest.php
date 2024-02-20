@@ -43,11 +43,13 @@ class DITest extends \PHPUnit\Framework\TestCase
 
 	public function testCreate() {
 		$di = new \vakata\di\DIContainer();
-		$di->register('\vakata\di\test\Class1');
+		$di->alias('\vakata\di\test\Class1', ['\vakata\di\test\ITest1']);
 		$c2 = new \vakata\di\test\Class2();
-		$di->register($c2, 'c2');
-		$di->register('\vakata\di\test\Class3', ['c3', 'c4'], [3], true);
-		$di->register('\vakata\di\test\Class2', '\vakata\di\test\ITest2');
+		$di->register($c2, false);
+        $di->alias('\vakata\di\test\Class2', ['c2'], false);
+		$di->defaults('\vakata\di\test\Class3', [3]);
+		$di->alias('\vakata\di\test\Class3', ['c3', 'c4']);
+		$di->alias('\vakata\di\test\Class2', ['\vakata\di\test\ITest2']);
 
 		$this->assertEquals(true, $di->instance('\vakata\di\test\Class1') instanceof \vakata\di\test\Class1);
 		$this->assertEquals(true, $di->instance('\vakata\di\test\ITest1') instanceof \vakata\di\test\Class1);
@@ -55,16 +57,15 @@ class DITest extends \PHPUnit\Framework\TestCase
 		$this->assertEquals(true, $di->instance('c2') instanceof \vakata\di\test\Class2);
 		$this->assertEquals(true, $di->instance('c3') instanceof \vakata\di\test\Class3);
 		$this->assertEquals(true, $di->instance('c4') instanceof \vakata\di\test\Class3);
-		$this->assertEquals(true, $di->instance('c3') === $di->instance('c4'));
 		$this->assertEquals(true, $di->instance('\vakata\di\test\Class4') instanceof \vakata\di\test\Class4);
 		$this->assertEquals(3, $di->instance('c3')->f1());
 		$this->assertEquals(3, $di->invoke('c3', 'f1'));
 		$this->assertEquals(true, $di->instance('\vakata\di\test\Class5', [2,3]) instanceof \vakata\di\test\Class5);
-		$di->register('\vakata\di\test\Class5', null, ['d'=>2,3]);
+		$di->defaults('\vakata\di\test\Class5', ['d'=>2,3]);
 		$c5 = $di->instance('\vakata\di\test\Class5');
 		$this->assertEquals(7, $c5->sum());
 		$this->assertEquals(7, $di->invoke('\vakata\di\test\Class5', 'sum'));
-		$this->assertEquals(9, $di->invoke('\vakata\di\test\Class5', 'sum', [], [4,1]));
+		$this->assertEquals(10, $di->invoke('\vakata\di\test\Class5', 'sum', [], [4,1]));
 		$this->assertEquals(3, $di->invoke('\vakata\di\test\Class5', 'sum2', [1,2]));
 	}
 }
