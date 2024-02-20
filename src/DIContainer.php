@@ -128,12 +128,6 @@ class DIContainer implements DIInterface
 
         return $this;
     }
-    /**
-     * Create an instance of a class.
-     * @param  string   $class     the class name (or registered alias)
-     * @param  array    $arguments optional arguments to use when creating the instance
-     * @return mixed               the class instance
-     */
     public function instance($class, array $arguments = [])
     {
         $defaults = [];
