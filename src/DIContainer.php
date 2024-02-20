@@ -147,7 +147,7 @@ class DIContainer implements DIInterface
         }
         return $this;
     }
-    public function instance(string $clss, array $arguments = [], bool $force = false): object
+    public function instance(string $clss, array $arguments = [], bool $force = false): mixed
     {
         $clss = trim($clss, '\\');
         if (isset($this->replacements[trim($clss, '\\')])) {

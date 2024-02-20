@@ -54,7 +54,7 @@ interface DIInterface
      * @param bool $force
      * @return T
      */
-    public function instance(string $class, array $arguments = [], bool $force = false): object;
+    public function instance(string $class, array $arguments = [], bool $force = false): mixed;
     
     /**
      * Invoke a method
