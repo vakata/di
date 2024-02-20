@@ -59,11 +59,11 @@ interface DIInterface
     /**
      * Invoke a method
      * 
-     * @param string $clss A classname
+     * @param mixed $clss A classname
      * @param string $method the method name
      * @param array $arguments arguments to pass when invoking
      * @param array $construct arguments to pass when creating an instance
      * @return mixed
      */
-    public function invoke(string $clss, string $method, array $arguments = [], array $construct = []): mixed;
+    public function invoke(mixed $clss, string $method, array $arguments = [], array $construct = []): mixed;
 }

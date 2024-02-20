@@ -181,11 +181,13 @@ class DIContainer implements DIInterface
             throw new DIException('Could not create instance - '.$e->getMessage());
         }
     }
-    public function invoke(string $clss, string $method, array $arguments = [], array $construct = []): mixed
+    public function invoke(mixed $clss, string $method, array $arguments = [], array $construct = []): mixed
     {
-        $clss = trim($clss, '\\');
-        if (isset($this->replacements[trim($clss, '\\')])) {
-            $clss = $this->replacements[$clss];
+        if (is_string($clss)) {
+            $clss = trim($clss, '\\');
+            if (isset($this->replacements[trim($clss, '\\')])) {
+                $clss = $this->replacements[$clss];
+            }
         }
         try {
             $method = new \ReflectionMethod($clss, $method);
@@ -194,7 +196,10 @@ class DIContainer implements DIInterface
         }
         $arguments = $this->arguments($method, $arguments);
         if (!$method->isStatic()) {
-            return $method->invokeArgs($this->instance($clss, $construct), $arguments);
+            if (is_string($clss)) {
+                $clss = $this->instance($clss, $construct);
+            }
+            return $method->invokeArgs($clss, $arguments);
         }
         return $method->invokeArgs(null, $arguments);
     }
