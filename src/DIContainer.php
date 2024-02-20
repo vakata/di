@@ -7,14 +7,27 @@ namespace vakata\di;
  */
 class DIContainer implements DIInterface
 {
-    protected $replacements = [];
-    protected $instances = [];
-    protected $decorations = [];
+    protected array $replacements = [];
+    protected array $instances = [];
+    protected array $decorations = [];
+
+    public function get(string $id): mixed
+    {
+        return $this->instance($id);
+    }
+    public function has(string $id): bool
+    {
+        $id = trim($id, '\\');
+        if (isset($this->replacements[$id])) {
+            $id = $this->replacements[$id][0];
+        }
+        return isset($this->instances[$id]);
+    }
 
     /**
      * @codeCoverageIgnore
      */
-    protected function arguments(\ReflectionMethod $method, array $args = [])
+    protected function arguments(\ReflectionMethod $method, array $args = []): array
     {
         $arguments = [];
         foreach ($method->getParameters() as $k => $v) {
@@ -78,7 +91,7 @@ class DIContainer implements DIInterface
                     $arguments[] = null;
                     continue;
                 }
-                throw $last;
+                throw $last ?? new \RuntimeException();
             }
             // TODO: add scalar type hints and possibly better union types
             // otherwise - just append
@@ -103,7 +116,7 @@ class DIContainer implements DIInterface
      * @param  boolean  $single   should only a single instance of this class exist
      * @return self
      */
-    public function register($class, $alias = null, array $defaults = [], $single = false)
+    public function register(mixed $class, mixed $alias = null, array $defaults = [], bool $single = false): mixed
     {
         if (is_object($class)) {
             $single = true;
@@ -128,7 +141,7 @@ class DIContainer implements DIInterface
 
         return $this;
     }
-    public function instance($class, array $arguments = [])
+    public function instance(string $class, array $arguments = [], bool $onlyExisting = false): mixed
     {
         $defaults = [];
         $single = false;
@@ -148,6 +161,10 @@ class DIContainer implements DIInterface
             return $this->instances[trim($class, '\\')];
         }
 
+        if ($onlyExisting) {
+            return null;
+        }
+
         try {
             $arguments = array_values($arguments);
             $reflection = new \ReflectionClass($class);
@@ -161,7 +178,7 @@ class DIContainer implements DIInterface
             }
             $instance = count($arguments) ? $reflection->newInstanceArgs($arguments) : new $reflection->name();
 
-            if ($single && $instance) {
+            if ($single) {
                 $this->instances[trim($class, '\\')] = $instance;
             }
 
@@ -178,7 +195,7 @@ class DIContainer implements DIInterface
      * @param  array  $construct optional array of arguments to construct the class instance with (if $class is string)
      * @return mixed             the result of the method execution
      */
-    public function invoke($class, $method, array $arguments = [], array $construct = [])
+    public function invoke(mixed $class, string $method, array $arguments = [], array $construct = []): mixed
     {
         if (is_string($class) && isset($this->replacements[trim($class, '\\')])) {
             $class = $this->replacements[trim($class, '\\')][0];
@@ -193,7 +210,7 @@ class DIContainer implements DIInterface
         return $method->invokeArgs($method->isStatic() ? null : $class, $arguments);
     }
 
-    public function __call($method, array $arguments = [])
+    public function __call(string $method, array $arguments = []): mixed
     {
         return $this->instance($method, $arguments);
     }

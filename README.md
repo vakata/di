@@ -2,9 +2,6 @@
 
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Software License][ico-license]](LICENSE.md)
-[![Build Status][ico-travis]][link-travis]
-[![Code Climate][ico-cc]][link-cc]
-[![Tests Coverage][ico-cc-coverage]][link-cc]
 
 PHP dependency injection / factory.
 
@@ -65,8 +62,6 @@ $di->invoke('\test\C', 'sum', [2], [5,6]);
 $c1 = new C();
 $di->invoke($c1, 'sum'); // returns 1
 ```
-
-Read more in the [API docs](docs/README.md)
 
 ## Testing
 
