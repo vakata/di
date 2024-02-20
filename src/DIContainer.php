@@ -54,7 +54,7 @@ class DIContainer implements DIInterface
                 }
             }
             if ($name) {
-                if (count($args) && $args[0] instanceof $name) {
+                if (count($args) && array_values($args)[0] instanceof $name) {
                     $arguments[] = array_shift($args);
                     continue;
                 }
