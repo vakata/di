@@ -59,14 +59,8 @@ class DIContainer implements DIInterface
                     continue;
                 }
                 $last = null;
-                try {
-                    $temp = $this->instance('\\'.$name);
-                } catch (\Throwable $e) {
-                    $last = $e;
-                    $temp = null;
-                }
-                if ($temp !== null) {
-                    $arguments[] = $temp;
+                if ($this->has('\\'.$name)) {
+                    $arguments[] = $this->get('\\'.$name);
                     continue;
                 }
                 if ($v->isOptional()) {
@@ -75,6 +69,16 @@ class DIContainer implements DIInterface
                 }
                 if ($v->allowsNull()) {
                     $arguments[] = null;
+                    continue;
+                }
+                try {
+                    $temp = $this->instance('\\'.$name);
+                } catch (\Throwable $e) {
+                    $last = $e;
+                    $temp = null;
+                }
+                if ($temp !== null) {
+                    $arguments[] = $temp;
                     continue;
                 }
                 throw $last ?? new \RuntimeException();
